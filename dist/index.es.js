@@ -92,25 +92,53 @@ var GPayButton = function (_PureComponent) {
       script.defer = true;
       document.body.appendChild(script);
     }, _this.setPaymentsClient = function () {
+      var _this$props = _this.props,
+          development = _this$props.development,
+          onPaymentAuthorized = _this$props.onPaymentAuthorized,
+          onPaymentDataChanged = _this$props.onPaymentDataChanged;
+
+
+      var options = {
+        environment: development ? 'TEST' : 'PRODUCTION'
+      };
+      if (typeof onPaymentAuthorized === 'function') {
+        options = _extends({}, options, {
+          paymentDataCallbacks: {
+            onPaymentAuthorized: onPaymentAuthorized
+          }
+        });
+      }
+      if (typeof onPaymentDataChanged === 'function') {
+        options = _extends({}, options, {
+          paymentDataCallbacks: _extends({}, options.paymentDataCallbacks, {
+            onPaymentDataChanged: onPaymentDataChanged
+          })
+        });
+      }
+
       _this.setState({
         paymentsClientInitialised: true,
-        paymentsClient: new window.google.payments.api.PaymentsClient({ environment: _this.props.development ? 'TEST' : 'PRODUCTION' })
+        paymentsClient: new window.google.payments.api.PaymentsClient(options)
       });
     }, _this.payButtonClickListener = function () {
-      var _this$props = _this.props,
-          currencyCode = _this$props.currencyCode,
-          countryCode = _this$props.countryCode,
-          totalPriceStatus = _this$props.totalPriceStatus,
-          totalPrice = _this$props.totalPrice,
-          displayItems = _this$props.displayItems,
-          totalPriceLabel = _this$props.totalPriceLabel,
-          checkoutOption = _this$props.checkoutOption,
-          merchantInfo = _this$props.merchantInfo,
-          baseRequest = _this$props.baseRequest,
-          paymentMethodType = _this$props.paymentMethodType,
-          allowedAuthMethods = _this$props.allowedAuthMethods,
-          allowedCardNetworks = _this$props.allowedCardNetworks,
-          tokenizationSpecification = _this$props.tokenizationSpecification;
+      var _this$props2 = _this.props,
+          currencyCode = _this$props2.currencyCode,
+          countryCode = _this$props2.countryCode,
+          totalPriceStatus = _this$props2.totalPriceStatus,
+          totalPrice = _this$props2.totalPrice,
+          displayItems = _this$props2.displayItems,
+          totalPriceLabel = _this$props2.totalPriceLabel,
+          checkoutOption = _this$props2.checkoutOption,
+          merchantInfo = _this$props2.merchantInfo,
+          baseRequest = _this$props2.baseRequest,
+          paymentMethodType = _this$props2.paymentMethodType,
+          allowedAuthMethods = _this$props2.allowedAuthMethods,
+          allowedCardNetworks = _this$props2.allowedCardNetworks,
+          tokenizationSpecification = _this$props2.tokenizationSpecification,
+          onLoadPaymentData = _this$props2.onLoadPaymentData,
+          onPaymentAuthorized = _this$props2.onPaymentAuthorized,
+          onPaymentDataChanged = _this$props2.onPaymentDataChanged,
+          onUserCanceled = _this$props2.onUserCanceled;
 
 
       var baseCardPaymentMethod = {
@@ -136,13 +164,24 @@ var GPayButton = function (_PureComponent) {
         merchantInfo: merchantInfo
       });
 
+      var callbackIntents = [];
+      if (typeof onPaymentAuthorized === 'function') {
+        callbackIntents.push('PAYMENT_AUTHORIZATION');
+      }
+      if (typeof onPaymentDataChanged === 'function') {
+        callbackIntents.push('SHIPPING_ADDRESS', 'SHIPPING_OPTION');
+      }
+      if (callbackIntents.length) {
+        paymentDataRequest.callbackIntents = [].concat(callbackIntents);
+      }
+
       _this.state.paymentsClient.loadPaymentData(paymentDataRequest).then(function (paymentData) {
-        // if using gateway tokenization, pass this token without modification
-        var paymentToken = paymentData.paymentMethodData.tokenizationData.token;
-        console.log('GPayButton.payButtonClickListener -> paymentToken', paymentToken);
-        // TODO pass the paymentToken variable to the parent component using a required prop callback function
+        onLoadPaymentData(paymentData);
       }).catch(function (error) {
-        console.error('GPayButton.payButtonClickListener -> error', error);
+        console.error('GPayButton.paymentsClient.loadPaymentData -> error', error);
+        if (error.statusCode === 'CANCELED') {
+          onUserCanceled(paymentDataRequest);
+        }
       });
     }, _temp), possibleConstructorReturn(_this, _ret);
   }
@@ -271,11 +310,11 @@ GPayButton.propTypes = {
   tokenizationSpecification: PropTypes.shape({
     type: PropTypes.oneOf(['PAYMENT_GATEWAY', 'DIRECT']).isRequired,
     parameters: PropTypes.oneOfType([PropTypes.shape({
-      gateway: PropTypes.string.isRequired,
-      gatewayMerchantId: PropTypes.string.isRequired
+      gateway: PropTypes.string,
+      gatewayMerchantId: PropTypes.string
     }), PropTypes.shape({
-      protocolVersion: PropTypes.string.isRequired,
-      publicKey: PropTypes.string.isRequired
+      protocolVersion: PropTypes.string,
+      publicKey: PropTypes.string
     })]).isRequired
   }).isRequired,
   allowedCardNetworks: PropTypes.arrayOf(PropTypes.oneOf(['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA'])),
@@ -284,19 +323,23 @@ GPayButton.propTypes = {
   purchase_context: PropTypes.shape({
     purchase_units: PropTypes.array
   }),
-  paymentMethodType: PropTypes.oneOf(['CARD', 'PAYPAL']).isRequired
+  paymentMethodType: PropTypes.oneOf(['CARD', 'PAYPAL']).isRequired,
+  onLoadPaymentData: PropTypes.func,
+  onPaymentAuthorized: PropTypes.func,
+  onPaymentDataChanged: PropTypes.func,
+  onUserCanceled: PropTypes.func
 };
 GPayButton.defaultProps = {
   development: false,
+  color: 'black',
+  buttonType: 'long',
   baseRequest: {
     apiVersion: 2,
     apiVersionMinor: 0
   },
   allowedCardNetworks: ['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA'],
   allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
-  paymentMethodType: 'CARD',
-  color: 'black',
-  buttonType: 'long'
+  paymentMethodType: 'CARD'
 };
 
 export default GPayButton;

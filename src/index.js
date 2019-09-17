@@ -55,12 +55,12 @@ export default class GPayButton extends PureComponent {
       type: PropTypes.oneOf(['PAYMENT_GATEWAY', 'DIRECT']).isRequired,
       parameters: PropTypes.oneOfType([
         PropTypes.shape({
-          gateway: PropTypes.string.isRequired,
-          gatewayMerchantId: PropTypes.string.isRequired
+          gateway: PropTypes.string,
+          gatewayMerchantId: PropTypes.string
         }),
         PropTypes.shape({
-          protocolVersion: PropTypes.string.isRequired,
-          publicKey: PropTypes.string.isRequired
+          protocolVersion: PropTypes.string,
+          publicKey: PropTypes.string
         })
       ]).isRequired
     }).isRequired,
@@ -70,20 +70,24 @@ export default class GPayButton extends PureComponent {
     purchase_context: PropTypes.shape({
       purchase_units: PropTypes.array
     }),
-    paymentMethodType: PropTypes.oneOf(['CARD', 'PAYPAL']).isRequired
+    paymentMethodType: PropTypes.oneOf(['CARD', 'PAYPAL']).isRequired,
+    onLoadPaymentData: PropTypes.func,
+    onPaymentAuthorized: PropTypes.func,
+    onPaymentDataChanged: PropTypes.func,
+    onUserCanceled: PropTypes.func
   }
 
   static defaultProps = {
     development: false,
+    color: 'black',
+    buttonType: 'long',
     baseRequest: {
       apiVersion: 2,
       apiVersionMinor: 0
     },
     allowedCardNetworks: ['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA'],
     allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
-    paymentMethodType: 'CARD',
-    color: 'black',
-    buttonType: 'long'
+    paymentMethodType: 'CARD'
   }
 
   state = {
@@ -107,9 +111,36 @@ export default class GPayButton extends PureComponent {
   }
 
   setPaymentsClient = () => {
+    const {
+      development,
+      onPaymentAuthorized,
+      onPaymentDataChanged
+    } = this.props
+
+    let options = {
+      environment: development ? 'TEST' : 'PRODUCTION'
+    }
+    if (typeof onPaymentAuthorized === 'function') {
+      options = {
+        ...options,
+        paymentDataCallbacks: {
+          onPaymentAuthorized
+        }
+      }
+    }
+    if (typeof onPaymentDataChanged === 'function') {
+      options = {
+        ...options,
+        paymentDataCallbacks: {
+          ...options.paymentDataCallbacks,
+          onPaymentDataChanged
+        }
+      }
+    }
+
     this.setState({
       paymentsClientInitialised: true,
-      paymentsClient: new window.google.payments.api.PaymentsClient({environment: this.props.development ? 'TEST' : 'PRODUCTION'})
+      paymentsClient: new window.google.payments.api.PaymentsClient(options)
     })
   }
 
@@ -127,7 +158,11 @@ export default class GPayButton extends PureComponent {
       paymentMethodType,
       allowedAuthMethods,
       allowedCardNetworks,
-      tokenizationSpecification
+      tokenizationSpecification,
+      onLoadPaymentData,
+      onPaymentAuthorized,
+      onPaymentDataChanged,
+      onUserCanceled
     } = this.props
 
     const baseCardPaymentMethod = {
@@ -154,14 +189,26 @@ export default class GPayButton extends PureComponent {
       merchantInfo
     }
 
+    const callbackIntents = []
+    if (typeof onPaymentAuthorized === 'function') {
+      callbackIntents.push('PAYMENT_AUTHORIZATION')
+    }
+    if (typeof onPaymentDataChanged === 'function') {
+      callbackIntents.push('SHIPPING_ADDRESS', 'SHIPPING_OPTION')
+    }
+    if (callbackIntents.length) {
+      paymentDataRequest.callbackIntents = [...callbackIntents]
+    }
+
     this.state.paymentsClient.loadPaymentData(paymentDataRequest).then(function(paymentData) {
-      // if using gateway tokenization, pass this token without modification
-      const paymentToken = paymentData.paymentMethodData.tokenizationData.token
-      console.log('GPayButton.payButtonClickListener -> paymentToken', paymentToken)
-      // TODO pass the paymentToken variable to the parent component using a required prop callback function
+      onLoadPaymentData(paymentData)
 
     }).catch(function(error) {
-      console.error('GPayButton.payButtonClickListener -> error', error)
+      console.error('GPayButton.paymentsClient.loadPaymentData -> error', error)
+      if (error.statusCode === 'CANCELED') {
+        onUserCanceled(paymentDataRequest)
+      }
+
     })
   }
 

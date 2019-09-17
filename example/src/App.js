@@ -11,17 +11,39 @@ const tokenizationSpecification = {
 }
 
 export default class App extends Component {
+  loadPaymentDataHandler = paymentData => {
+    console.log('App.loadPaymentDataHandler: paymentData', paymentData)
+    // const paymentToken = paymentData.paymentMethodData.tokenizationData.token
+  }
+
+  paymentAuthorizedHandler = paymentData => {
+    console.log('App.paymentAuthorizedHandler: paymentData', paymentData)
+    // const paymentToken = paymentData.paymentMethodData.tokenizationData.token
+    // TODO execute payment
+  }
+
+  onUserCanceledHandler = paymentRequest => {
+    console.log('App.onUserCanceled: paymentRequest', paymentRequest)
+  }
+
+  paymentDataChangedHandler = paymentData => {
+    console.log('App.paymentDataChangedHandler: paymentData', paymentData)
+  }
+
   render () {
     return (
       <div style={{display: 'grid', alignContent: 'center', justifyContent: 'center', height: '100%'}}>
         <GPayButton
           totalPriceStatus={'FINAL'}
-          totalPrice={'123.45'}
-          currencyCode={'USD'}
-          countryCode={'US'}
+          totalPrice={'1.45'}
+          currencyCode={'GBP'}
+          countryCode={'UK'}
           tokenizationSpecification={tokenizationSpecification}
           development={true}
           merchantInfo={{merchantName: 'Example Merchant'}}
+          onLoadPaymentData={this.loadPaymentDataHandler}
+          onPaymentAuthorized={this.paymentAuthorizedHandler}
+          onUserCanceled={this.onUserCanceledHandler}
         />
       </div>
     )
