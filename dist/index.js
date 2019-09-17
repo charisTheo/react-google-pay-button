@@ -4,37 +4,7 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 
 var React = require('react');
 var React__default = _interopDefault(React);
-require('prop-types');
-
-function styleInject(css, ref) {
-  if ( ref === void 0 ) ref = {};
-  var insertAt = ref.insertAt;
-
-  if (!css || typeof document === 'undefined') { return; }
-
-  var head = document.head || document.getElementsByTagName('head')[0];
-  var style = document.createElement('style');
-  style.type = 'text/css';
-
-  if (insertAt === 'top') {
-    if (head.firstChild) {
-      head.insertBefore(style, head.firstChild);
-    } else {
-      head.appendChild(style);
-    }
-  } else {
-    head.appendChild(style);
-  }
-
-  if (style.styleSheet) {
-    style.styleSheet.cssText = css;
-  } else {
-    style.appendChild(document.createTextNode(css));
-  }
-}
-
-var css = "/* add css styles here (optional) */\n\n.styles_test__32Qsm {\n  display: inline-block;\n  margin: 2em auto;\n  border: 2px solid #000;\n  font-size: 2em;\n}\n";
-styleInject(css);
+var PropTypes = _interopDefault(require('prop-types'));
 
 var classCallCheck = function (instance, Constructor) {
   if (!(instance instanceof Constructor)) {
@@ -98,30 +68,9 @@ var possibleConstructorReturn = function (self, call) {
   return call && (typeof call === "object" || typeof call === "function") ? call : self;
 };
 
-/* eslint-disable padded-blocks */
+/* eslint-disable react/no-unused-prop-types */
 
 var GOOGLE_PAY_BUTTON_SDK_URL = 'https://pay.google.com/gp/p/js/pay.js';
-var baseRequest = {
-  apiVersion: 2,
-  apiVersionMinor: 0
-};
-var tokenizationSpecification = {
-  type: 'PAYMENT_GATEWAY',
-  parameters: {
-    'gateway': 'example',
-    'gatewayMerchantId': 'exampleGatewayMerchantId'
-  }
-};
-var allowedCardNetworks = ['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA'];
-var allowedAuthMethods = ['PAN_ONLY', 'CRYPTOGRAM_3DS'];
-var baseCardPaymentMethod = {
-  type: 'CARD',
-  parameters: {
-    allowedAuthMethods: allowedAuthMethods,
-    allowedCardNetworks: allowedCardNetworks
-  },
-  tokenizationSpecification: tokenizationSpecification
-};
 
 var GPayButton = function (_PureComponent) {
   inherits(GPayButton, _PureComponent);
@@ -150,28 +99,55 @@ var GPayButton = function (_PureComponent) {
     }, _this.setPaymentsClient = function () {
       _this.setState({
         paymentsClientInitialised: true,
-        paymentsClient: new window.google.payments.api.PaymentsClient({ environment: 'TEST' })
+        paymentsClient: new window.google.payments.api.PaymentsClient({ environment: _this.props.development ? 'TEST' : 'PRODUCTION' })
       });
     }, _this.payButtonClickListener = function () {
+      var _this$props = _this.props,
+          currencyCode = _this$props.currencyCode,
+          countryCode = _this$props.countryCode,
+          totalPriceStatus = _this$props.totalPriceStatus,
+          totalPrice = _this$props.totalPrice,
+          displayItems = _this$props.displayItems,
+          totalPriceLabel = _this$props.totalPriceLabel,
+          checkoutOption = _this$props.checkoutOption,
+          merchantInfo = _this$props.merchantInfo,
+          baseRequest = _this$props.baseRequest,
+          paymentMethodType = _this$props.paymentMethodType,
+          allowedAuthMethods = _this$props.allowedAuthMethods,
+          allowedCardNetworks = _this$props.allowedCardNetworks,
+          tokenizationSpecification = _this$props.tokenizationSpecification;
+
+
+      var baseCardPaymentMethod = {
+        type: paymentMethodType,
+        parameters: {
+          allowedAuthMethods: allowedAuthMethods,
+          allowedCardNetworks: allowedCardNetworks
+        },
+        tokenizationSpecification: tokenizationSpecification
+      };
+
       var paymentDataRequest = _extends({}, baseRequest, {
         allowedPaymentMethods: [baseCardPaymentMethod],
         transactionInfo: {
-          totalPriceStatus: 'FINAL',
-          totalPrice: '123.45',
-          currencyCode: 'USD',
-          countryCode: 'US'
+          currencyCode: currencyCode,
+          countryCode: countryCode,
+          totalPriceStatus: totalPriceStatus,
+          totalPrice: totalPrice,
+          displayItems: displayItems,
+          totalPriceLabel: totalPriceLabel,
+          checkoutOption: checkoutOption
         },
-        merchantInfo: {
-          merchantName: 'Example Merchant'
-        }
+        merchantInfo: merchantInfo
       });
 
       _this.state.paymentsClient.loadPaymentData(paymentDataRequest).then(function (paymentData) {
         // if using gateway tokenization, pass this token without modification
         var paymentToken = paymentData.paymentMethodData.tokenizationData.token;
-        console.log('TCL: GPayButton -> payButtonClickListener -> paymentToken', paymentToken);
-      }).catch(function (err) {
-        console.error('payButtonClickListener -> err', err);
+        console.log('GPayButton.payButtonClickListener -> paymentToken', paymentToken);
+        // TODO pass the paymentToken variable to the parent component using a required prop callback function
+      }).catch(function (error) {
+        console.error('GPayButton.payButtonClickListener -> error', error);
       });
     }, _temp), possibleConstructorReturn(_this, _ret);
   }
@@ -179,7 +155,6 @@ var GPayButton = function (_PureComponent) {
   createClass(GPayButton, [{
     key: 'componentDidMount',
     value: function componentDidMount() {
-      console.log('GPayButton.componentDidMount: this.state.paymentsClientInitialised', this.state.paymentsClientInitialised);
       if (!this.state.paymentsClientInitialised) {
         this.loadSDK();
       }
@@ -189,18 +164,40 @@ var GPayButton = function (_PureComponent) {
     value: function componentDidUpdate() {
       var _this2 = this;
 
-      if (this.state.isReadyToPay) return;
-      console.log('TCL: GPayButton -> componentDidUpdate -> this.state.paymentsClientInitialised', this.state.paymentsClientInitialised);
+      var _state = this.state,
+          isReadyToPay = _state.isReadyToPay,
+          paymentsClientInitialised = _state.paymentsClientInitialised,
+          paymentsClient = _state.paymentsClient;
 
-      var isReadyToPayRequest = _extends({}, baseRequest, {
+
+      if (isReadyToPay || !paymentsClientInitialised) {
+        return;
+      }
+
+      var _props = this.props,
+          paymentMethodType = _props.paymentMethodType,
+          allowedAuthMethods = _props.allowedAuthMethods,
+          allowedCardNetworks = _props.allowedCardNetworks,
+          tokenizationSpecification = _props.tokenizationSpecification;
+
+      var baseCardPaymentMethod = {
+        type: paymentMethodType,
+        parameters: {
+          allowedAuthMethods: allowedAuthMethods,
+          allowedCardNetworks: allowedCardNetworks
+        },
+        tokenizationSpecification: tokenizationSpecification
+      };
+
+      var isReadyToPayRequest = _extends({}, this.props.baseRequest, {
         allowedPaymentMethods: [baseCardPaymentMethod]
       });
 
-      this.state.paymentsClient.isReadyToPay(isReadyToPayRequest).then(function (response) {
+      paymentsClient.isReadyToPay(isReadyToPayRequest).then(function (response) {
         var isReadyToPay = response.result;
         if (isReadyToPay) {
           // * this function is called only to initialise the button styling, the returned button element is NOT used
-          _this2.state.paymentsClient.createButton({ onClick: _this2.payButtonClickListener });
+          paymentsClient.createButton({ onClick: _this2.payButtonClickListener });
           _this2.setState({ isReadyToPay: isReadyToPay });
         }
       }).catch(function (error) {
@@ -210,18 +207,21 @@ var GPayButton = function (_PureComponent) {
   }, {
     key: 'render',
     value: function render() {
-      // const {
+      var _props2 = this.props,
+          className = _props2.className,
+          style = _props2.style,
+          color = _props2.color,
+          buttonType = _props2.buttonType;
 
-      // } = this.props
 
       return React__default.createElement(
         'div',
-        null,
+        { className: className, style: style },
         this.state.isReadyToPay && React__default.createElement('button', {
           onClick: this.payButtonClickListener,
           type: 'button',
           'aria-label': 'Google Pay',
-          className: 'gpay-button black long'
+          className: 'gpay-button ' + color + ' ' + buttonType
         })
       );
     }
@@ -229,9 +229,79 @@ var GPayButton = function (_PureComponent) {
   return GPayButton;
 }(React.PureComponent);
 
-GPayButton.propTypes = {};
+GPayButton.propTypes = {
+  style: PropTypes.object,
+  className: PropTypes.string,
+  color: PropTypes.oneOf(['black', 'white']),
+  buttonType: PropTypes.oneOf(['long', 'short']),
+  development: PropTypes.bool,
+  // * Google Pay API
+  currencyCode: PropTypes.string.isRequired,
+  countryCode: PropTypes.string,
+  totalPriceStatus: PropTypes.string.isRequired,
+  totalPrice: function totalPrice(props, propName, componentName) {
+    if (props.totalPriceStatus !== 'NOT_CURRENTLY_KNOWN') {
+      if (props[propName] === undefined || props[propName] === '') {
+        return new Error(componentName + ': the prop totalPrice is required unless the prop totalPriceStatus is set to NOT_CURRENTLY_KNOWN');
+      } else if (!/^[0-9]+(\.[0-9][0-9])?$/.exec(props[propName])) {
+        return new Error(componentName + ': the prop totalPrice should be either in a number format or a string of numbers. Should match ^[0-9]+(\\.[0-9][0-9])?$');
+      }
+    }
+  },
+  displayItems: PropTypes.arrayOf(PropTypes.shape({
+    label: PropTypes.string.isRequired,
+    type: PropTypes.oneOf(['LINE_ITEM', 'SUBTOTAL']),
+    price: PropTypes.string.isRequired,
+    status: PropTypes.oneOf(['FINAL', 'PENDING'])
+  })),
+  totalPriceLabel: PropTypes.string,
+  checkoutOption: PropTypes.string,
+  merchantInfo: function merchantInfo(props, propName, componentName) {
+    if (props.development === false && (props[propName].merchantId === undefined || props[propName].merchantId === '')) {
+      return new Error(componentName + ': merchantInfo -> merchantId is required in production environment!');
+    } else {
+      var merchantInfoProps = props[propName];
+      // merchantName, merchantOrigin
+      for (var prop in merchantInfoProps) {
+        if (typeof merchantInfoProps[prop] !== 'string') {
+          return new Error(componentName + ': merchantInfo -> ' + prop + ' should be a string!');
+        }
+      }
+    }
+  },
+  baseRequest: PropTypes.shape({
+    apiVersion: PropTypes.number,
+    apiVersionMinor: PropTypes.number
+  }),
+  tokenizationSpecification: PropTypes.shape({
+    type: PropTypes.oneOf(['PAYMENT_GATEWAY', 'DIRECT']).isRequired,
+    parameters: PropTypes.oneOfType([PropTypes.shape({
+      gateway: PropTypes.string.isRequired,
+      gatewayMerchantId: PropTypes.string.isRequired
+    }), PropTypes.shape({
+      protocolVersion: PropTypes.string.isRequired,
+      publicKey: PropTypes.string.isRequired
+    })]).isRequired
+  }).isRequired,
+  allowedCardNetworks: PropTypes.arrayOf(PropTypes.oneOf(['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA'])),
+  allowedAuthMethods: PropTypes.arrayOf(PropTypes.oneOf(['PAN_ONLY', 'CRYPTOGRAM_3DS'])),
+  // ? Paypal support
+  purchase_context: PropTypes.shape({
+    purchase_units: PropTypes.array
+  }),
+  paymentMethodType: PropTypes.oneOf(['CARD', 'PAYPAL']).isRequired
+};
 GPayButton.defaultProps = {
-  text: 'Button'
+  development: false,
+  baseRequest: {
+    apiVersion: 2,
+    apiVersionMinor: 0
+  },
+  allowedCardNetworks: ['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA'],
+  allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+  paymentMethodType: 'CARD',
+  color: 'black',
+  buttonType: 'long'
 };
 
 module.exports = GPayButton;
