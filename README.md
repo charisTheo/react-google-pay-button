@@ -23,33 +23,87 @@ npm install --save react-google-pay-button
 
 ## Usage
 
+### Development example
+
 ```jsx
-import React, { Component } from 'react'
-
-import GPayButton from 'react-google-pay-button'
-
 class Example extends Component {
   render () {
-    const tokenizationSpecification = {
-      type: 'PAYMENT_GATEWAY',
-      parameters: {
-        'gateway': 'example',
-        'gatewayMerchantId': 'exampleGatewayMerchantId'
-      }
-    }
-
     return (
       <GPayButton
         totalPriceStatus={'FINAL'}
         totalPrice={'14.45'}
         currencyCode={'GBP'}
         countryCode={'UK'}
-        tokenizationSpecification={tokenizationSpecification}
         development={true}
-        merchantInfo={{merchantName: 'Example Merchant'}}
+      />
+    )
+  }
+}
+```
+
+### Production example
+
+> To get a `merchantId`, follow [this checklist](https://developers.google.com/pay/api/web/guides/test-and-deploy/integration-checklist)
+
+```jsx
+import React, { Component } from 'react'
+
+import GPayButton from 'react-google-pay-button'
+
+// allowed user payment methods 💰
+const paymentMethods = [
+  {
+    type: 'CARD',
+    parameters: {
+      allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+      allowedCardNetworks: ['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA']
+    },
+    tokenizationSpecification: {
+      type: 'PAYMENT_GATEWAY',
+      parameters: {
+        'gateway': 'stripe',
+        'stripe:version': '2019-03-14',
+        'stripe:publishableKey': '<YOUR_PUBLIC_STRIPE_KEY>'
+      }
+    }
+  },
+  {
+    type: 'PAYPAL',
+    parameters: {
+      'purchase_context': {
+        'purchase_units': [{
+          'payee': {
+            'merchant_id': '<YOUR PAYPAL_ACCOUNT_ID>'
+          }
+        }]
+      }
+    },
+    tokenizationSpecification: {
+      type: 'DIRECT'
+    }
+  }
+]
+
+class Example extends Component {
+  loadPaymentDataHandler = paymentData => {
+    const paymentToken = paymentData.paymentMethodData.tokenizationData.token
+  }
+
+  render () {
+    return (
+      <GPayButton
+        totalPriceStatus={'FINAL'}
+        totalPrice={'14.45'}
+        currencyCode={'GBP'}
+        countryCode={'UK'}
+        allowedPaymentMethods={paymentMethods}
+        development={true}
+        merchantInfo={{
+          merchantName: '<YOUR MERCHANT NAME>',
+          // A Google merchant identifier issued after your website is approved by Google ✅
+          merchantId: '<YOUR MERCHANT ID>'
+        }}
         onLoadPaymentData={this.loadPaymentDataHandler}
-        onPaymentAuthorized={this.paymentAuthorizedHandler}
-        onUserCanceled={this.onUserCanceledHandler}
       />
     )
   }
@@ -72,22 +126,40 @@ class Example extends Component {
 | [countryCode][1]    |     string      |    **required** for merchants based in EEA countries    |
 | [totalPrice][1] | string \| number | **required** unless `totalPriceStatus` is set to `NOT_CURRENTLY_KNOWN` |
 | [merchantInfo][6] | object | `merchantId` is **required** in *production* |
+| [allowedPaymentMethods][14] | [PaymentMethod][8] | optional ([default](#allowedPaymentMethods))
 | [displayItems][1] | [DisplayItem][5][] | optional |
 | [totalPriceLabel][1] | string | optional |
 | [checkoutOption][1] | string | optional |
-| [allowedAuthMethods][7] | string[] | `['PAN_ONLY', 'CRYPTOGRAM_3DS']` |
-| [allowedCardNetworks][7] | string[] | `['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA']` |
-| [paymentMethodType][8] | string | `CARD` (`CARD` or `PAYPAL`) |
-| [purchase_context][9] | object | **required** if `paymentMethodType` is set to `PAYPAL` |
-| [onLoadPaymentData][10] | function | optional |
-| [onPaymentAuthorized][11] | function | optional |
-| [onPaymentDataChanged][12] | function | optional |
+| [onLoadPaymentData][9] | function | optional |
+| [onPaymentAuthorized][10] | function | optional |
+| [onPaymentDataChanged][11] | function | optional |
 | onUserCanceled | function | optional |
-
 ---
-## License
 
-MIT © [charisTheo](https://github.com/charisTheo)
+### allowedPaymentMethods
+
+#### Default value
+```JavaScript
+[
+  {
+    type: 'CARD',
+    parameters: {
+      allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+      allowedCardNetworks: ['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA']
+    },
+    tokenizationSpecification: {
+      type: 'PAYMENT_GATEWAY',
+      parameters: {
+        gateway: 'example',
+        gatewayMerchantId: 'exampleGatewayMerchantId'
+      }
+    }
+  }
+]
+```
+
+ * [CardParameters][12]
+ * [PayPalParameters][13]
 
 [1]: https://developers.google.com/pay/api/web/reference/object#TransactionInfo
 [2]: https://developers.google.com/pay/api/web/reference/object#PaymentMethodTokenizationSpecification
@@ -95,9 +167,10 @@ MIT © [charisTheo](https://github.com/charisTheo)
 [4]: https://developers.google.com/pay/api/web/reference/object#IsReadyToPayRequest
 [5]: https://developers.google.com/pay/api/web/reference/object#DisplayItem
 [6]: https://developers.google.com/pay/api/web/reference/object#MerchantInfo
-[7]: https://developers.google.com/pay/api/web/reference/object#CardParameters
 [8]: https://developers.google.com/pay/api/web/reference/object#PaymentMethod
-[9]: https://developers.google.com/pay/api/web/reference/object#PayPalParameters
-[10]: https://developers.google.com/pay/api/web/reference/client#loadPaymentData
-[11]: https://developers.google.com/pay/api/web/reference/client#onPaymentAuthorized
-[12]: https://developers.google.com/pay/api/web/reference/client#onPaymentDataChanged
+[9]: https://developers.google.com/pay/api/web/reference/client#loadPaymentData
+[10]: https://developers.google.com/pay/api/web/reference/client#onPaymentAuthorized
+[11]: https://developers.google.com/pay/api/web/reference/client#onPaymentDataChanged
+[12]: https://developers.google.com/pay/api/web/reference/object#CardParameters
+[13]: https://developers.google.com/pay/api/web/reference/object#PayPalParameters
+[14]: https://developers.google.com/pay/api/web/reference/object#PaymentDataRequest

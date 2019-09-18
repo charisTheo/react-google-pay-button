@@ -135,28 +135,19 @@ var GPayButton = function (_PureComponent) {
           totalPriceLabel = _this$props2.totalPriceLabel,
           checkoutOption = _this$props2.checkoutOption,
           merchantInfo = _this$props2.merchantInfo,
-          baseRequest = _this$props2.baseRequest,
-          paymentMethodType = _this$props2.paymentMethodType,
-          allowedAuthMethods = _this$props2.allowedAuthMethods,
-          allowedCardNetworks = _this$props2.allowedCardNetworks,
-          tokenizationSpecification = _this$props2.tokenizationSpecification,
+          apiVersion = _this$props2.apiVersion,
+          apiVersionMinor = _this$props2.apiVersionMinor,
+          allowedPaymentMethods = _this$props2.allowedPaymentMethods,
           onLoadPaymentData = _this$props2.onLoadPaymentData,
           onPaymentAuthorized = _this$props2.onPaymentAuthorized,
           onPaymentDataChanged = _this$props2.onPaymentDataChanged,
           onUserCanceled = _this$props2.onUserCanceled;
 
 
-      var baseCardPaymentMethod = {
-        type: paymentMethodType,
-        parameters: {
-          allowedAuthMethods: allowedAuthMethods,
-          allowedCardNetworks: allowedCardNetworks
-        },
-        tokenizationSpecification: tokenizationSpecification
-      };
-
-      var paymentDataRequest = _extends({}, baseRequest, {
-        allowedPaymentMethods: [baseCardPaymentMethod],
+      var paymentDataRequest = {
+        apiVersion: apiVersion,
+        apiVersionMinor: apiVersionMinor,
+        allowedPaymentMethods: allowedPaymentMethods,
         transactionInfo: {
           currencyCode: currencyCode,
           countryCode: countryCode,
@@ -167,7 +158,7 @@ var GPayButton = function (_PureComponent) {
           checkoutOption: checkoutOption
         },
         merchantInfo: merchantInfo
-      });
+      };
 
       var callbackIntents = [];
       if (typeof onPaymentAuthorized === 'function') {
@@ -214,23 +205,16 @@ var GPayButton = function (_PureComponent) {
       }
 
       var _props = this.props,
-          paymentMethodType = _props.paymentMethodType,
-          allowedAuthMethods = _props.allowedAuthMethods,
-          allowedCardNetworks = _props.allowedCardNetworks,
-          tokenizationSpecification = _props.tokenizationSpecification;
+          apiVersion = _props.apiVersion,
+          apiVersionMinor = _props.apiVersionMinor,
+          allowedPaymentMethods = _props.allowedPaymentMethods;
 
-      var baseCardPaymentMethod = {
-        type: paymentMethodType,
-        parameters: {
-          allowedAuthMethods: allowedAuthMethods,
-          allowedCardNetworks: allowedCardNetworks
-        },
-        tokenizationSpecification: tokenizationSpecification
+
+      var isReadyToPayRequest = {
+        apiVersion: apiVersion,
+        apiVersionMinor: apiVersionMinor,
+        allowedPaymentMethods: allowedPaymentMethods
       };
-
-      var isReadyToPayRequest = _extends({}, this.props.baseRequest, {
-        allowedPaymentMethods: [baseCardPaymentMethod]
-      });
 
       paymentsClient.isReadyToPay(isReadyToPayRequest).then(function (response) {
         var isReadyToPay = response.result;
@@ -250,7 +234,7 @@ var GPayButton = function (_PureComponent) {
           className = _props2.className,
           style = _props2.style,
           color = _props2.color,
-          buttonType = _props2.buttonType;
+          type = _props2.type;
 
 
       return React__default.createElement(
@@ -260,7 +244,7 @@ var GPayButton = function (_PureComponent) {
           onClick: this.payButtonClickListener,
           type: 'button',
           'aria-label': 'Google Pay',
-          className: 'gpay-button ' + color + ' ' + buttonType
+          className: 'gpay-button ' + color + ' ' + type
         })
       );
     }
@@ -271,10 +255,12 @@ var GPayButton = function (_PureComponent) {
 GPayButton.propTypes = {
   style: PropTypes.object,
   className: PropTypes.string,
-  color: PropTypes.oneOf(['black', 'white']),
-  buttonType: PropTypes.oneOf(['long', 'short']),
   development: PropTypes.bool,
+  color: PropTypes.oneOf(['black', 'white']),
+  type: PropTypes.oneOf(['long', 'short']),
   // * Google Pay API
+  apiVersion: PropTypes.number,
+  apiVersionMinor: PropTypes.number,
   currencyCode: PropTypes.string.isRequired,
   countryCode: PropTypes.string,
   totalPriceStatus: PropTypes.string.isRequired,
@@ -289,7 +275,7 @@ GPayButton.propTypes = {
   },
   displayItems: PropTypes.arrayOf(PropTypes.shape({
     label: PropTypes.string.isRequired,
-    type: PropTypes.oneOf(['LINE_ITEM', 'SUBTOTAL']),
+    type: PropTypes.oneOf(['LINE_ITEM', 'SUBTOTAL']).isRequired,
     price: PropTypes.string.isRequired,
     status: PropTypes.oneOf(['FINAL', 'PENDING'])
   })),
@@ -308,43 +294,53 @@ GPayButton.propTypes = {
       }
     }
   },
-  baseRequest: PropTypes.shape({
-    apiVersion: PropTypes.number,
-    apiVersionMinor: PropTypes.number
-  }),
-  tokenizationSpecification: PropTypes.shape({
-    type: PropTypes.oneOf(['PAYMENT_GATEWAY', 'DIRECT']).isRequired,
+  allowedPaymentMethods: PropTypes.arrayOf(PropTypes.shape({
+    type: PropTypes.oneOf(['CARD', 'PAYPAL']),
     parameters: PropTypes.oneOfType([PropTypes.shape({
-      gateway: PropTypes.string,
-      gatewayMerchantId: PropTypes.string
+      allowedAuthMethods: PropTypes.arrayOf(PropTypes.oneOf(['PAN_ONLY', 'CRYPTOGRAM_3DS'])),
+      allowedCardNetworks: PropTypes.arrayOf(PropTypes.oneOf(['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA']))
     }), PropTypes.shape({
-      protocolVersion: PropTypes.string,
-      publicKey: PropTypes.string
-    })]).isRequired
-  }).isRequired,
-  allowedCardNetworks: PropTypes.arrayOf(PropTypes.oneOf(['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA'])),
-  allowedAuthMethods: PropTypes.arrayOf(PropTypes.oneOf(['PAN_ONLY', 'CRYPTOGRAM_3DS'])),
-  // ? Paypal support
-  purchase_context: PropTypes.shape({
-    purchase_units: PropTypes.array
-  }),
-  paymentMethodType: PropTypes.oneOf(['CARD', 'PAYPAL']).isRequired,
+      purchase_context: PropTypes.shape({
+        purchase_units: PropTypes.array
+      })
+    })]),
+    tokenizationSpecification: PropTypes.shape({
+      type: PropTypes.oneOf(['PAYMENT_GATEWAY', 'DIRECT']),
+      parameters: PropTypes.oneOfType([PropTypes.shape({
+        gateway: PropTypes.string,
+        gatewayMerchantId: PropTypes.string
+      }), PropTypes.shape({
+        protocolVersion: PropTypes.string,
+        publicKey: PropTypes.string
+      })])
+    })
+  })),
   onLoadPaymentData: PropTypes.func,
   onPaymentAuthorized: PropTypes.func,
   onPaymentDataChanged: PropTypes.func,
   onUserCanceled: PropTypes.func
 };
 GPayButton.defaultProps = {
+  style: {},
   development: false,
   color: 'black',
-  buttonType: 'long',
-  baseRequest: {
-    apiVersion: 2,
-    apiVersionMinor: 0
-  },
-  allowedCardNetworks: ['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA'],
-  allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
-  paymentMethodType: 'CARD'
+  type: 'long',
+  apiVersion: 2,
+  apiVersionMinor: 0,
+  allowedPaymentMethods: [{
+    type: 'CARD',
+    parameters: {
+      allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+      allowedCardNetworks: ['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA']
+    },
+    tokenizationSpecification: {
+      type: 'PAYMENT_GATEWAY',
+      parameters: {
+        gateway: 'example',
+        gatewayMerchantId: 'exampleGatewayMerchantId'
+      }
+    }
+  }]
 };
 
 module.exports = GPayButton;

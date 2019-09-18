@@ -2,13 +2,23 @@ import React, { Component } from 'react'
 
 import GPayButton from 'react-google-pay-button'
 
-const tokenizationSpecification = {
-  type: 'PAYMENT_GATEWAY',
-  parameters: {
-    'gateway': 'example',
-    'gatewayMerchantId': 'exampleGatewayMerchantId'
+const paymentMethods = [
+  {
+    type: 'CARD',
+    parameters: {
+      allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+      allowedCardNetworks: ['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA']
+    },
+    tokenizationSpecification: {
+      type: 'PAYMENT_GATEWAY',
+      parameters: {
+        'gateway': 'stripe',
+        'stripe:version': '2019-03-14',
+        'stripe:publishableKey': 'pk_live_HvZMfApWVG62QaAwPdu8XezV00yRddWoZp'
+      }
+    }
   }
-}
+]
 
 export default class App extends Component {
   loadPaymentDataHandler = paymentData => {
@@ -38,9 +48,11 @@ export default class App extends Component {
           totalPrice={'1.45'}
           currencyCode={'GBP'}
           countryCode={'UK'}
-          tokenizationSpecification={tokenizationSpecification}
+          merchantInfo={{
+            merchantName: 'Example Merchant',
+            merchantId: '<YOUR MERCHANT ID>'
+          }}
           development={true}
-          merchantInfo={{merchantName: 'Example Merchant'}}
           onLoadPaymentData={this.loadPaymentDataHandler}
           onPaymentAuthorized={this.paymentAuthorizedHandler}
           onUserCanceled={this.onUserCanceledHandler}

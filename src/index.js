@@ -49,26 +49,35 @@ export default class GPayButton extends PureComponent {
         }
       }
     },
-    tokenizationSpecification: PropTypes.shape({
-      type: PropTypes.oneOf(['PAYMENT_GATEWAY', 'DIRECT']).isRequired,
-      parameters: PropTypes.oneOfType([
-        PropTypes.shape({
-          gateway: PropTypes.string,
-          gatewayMerchantId: PropTypes.string
-        }),
-        PropTypes.shape({
-          protocolVersion: PropTypes.string,
-          publicKey: PropTypes.string
+    allowedPaymentMethods: PropTypes.arrayOf(
+      PropTypes.shape({
+        type: PropTypes.oneOf(['CARD', 'PAYPAL']),
+        parameters: PropTypes.oneOfType([
+          PropTypes.shape({
+            allowedAuthMethods: PropTypes.arrayOf(PropTypes.oneOf(['PAN_ONLY', 'CRYPTOGRAM_3DS'])),
+            allowedCardNetworks: PropTypes.arrayOf(PropTypes.oneOf(['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA']))
+          }),
+          PropTypes.shape({
+            purchase_context: PropTypes.shape({
+              purchase_units: PropTypes.array
+            })
+          })
+        ]),
+        tokenizationSpecification: PropTypes.shape({
+          type: PropTypes.oneOf(['PAYMENT_GATEWAY', 'DIRECT']),
+          parameters: PropTypes.oneOfType([
+            PropTypes.shape({
+              gateway: PropTypes.string,
+              gatewayMerchantId: PropTypes.string
+            }),
+            PropTypes.shape({
+              protocolVersion: PropTypes.string,
+              publicKey: PropTypes.string
+            })
+          ])
         })
-      ]).isRequired
-    }).isRequired,
-    allowedAuthMethods: PropTypes.arrayOf(PropTypes.oneOf(['PAN_ONLY', 'CRYPTOGRAM_3DS'])),
-    allowedCardNetworks: PropTypes.arrayOf(PropTypes.oneOf(['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA'])),
-    // ? Paypal support
-    purchase_context: PropTypes.shape({
-      purchase_units: PropTypes.array
-    }),
-    paymentMethodType: PropTypes.oneOf(['CARD', 'PAYPAL']),
+      })
+    ),
     onLoadPaymentData: PropTypes.func,
     onPaymentAuthorized: PropTypes.func,
     onPaymentDataChanged: PropTypes.func,
@@ -82,9 +91,22 @@ export default class GPayButton extends PureComponent {
     type: 'long',
     apiVersion: 2,
     apiVersionMinor: 0,
-    allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
-    allowedCardNetworks: ['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA'],
-    paymentMethodType: 'CARD'
+    allowedPaymentMethods: [
+      {
+        type: 'CARD',
+        parameters: {
+          allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+          allowedCardNetworks: ['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA']
+        },
+        tokenizationSpecification: {
+          type: 'PAYMENT_GATEWAY',
+          parameters: {
+            gateway: 'example',
+            gatewayMerchantId: 'exampleGatewayMerchantId'
+          }
+        }
+      }
+    ]
   }
 
   state = {
@@ -153,29 +175,17 @@ export default class GPayButton extends PureComponent {
       merchantInfo,
       apiVersion,
       apiVersionMinor,
-      paymentMethodType,
-      allowedAuthMethods,
-      allowedCardNetworks,
-      tokenizationSpecification,
+      allowedPaymentMethods,
       onLoadPaymentData,
       onPaymentAuthorized,
       onPaymentDataChanged,
       onUserCanceled
     } = this.props
 
-    const baseCardPaymentMethod = {
-      type: paymentMethodType,
-      parameters: {
-        allowedAuthMethods,
-        allowedCardNetworks
-      },
-      tokenizationSpecification
-    }
-
     const paymentDataRequest = {
       apiVersion,
       apiVersionMinor,
-      allowedPaymentMethods: [baseCardPaymentMethod],
+      allowedPaymentMethods,
       transactionInfo: {
         currencyCode,
         countryCode,
@@ -225,24 +235,13 @@ export default class GPayButton extends PureComponent {
     const {
       apiVersion,
       apiVersionMinor,
-      paymentMethodType,
-      allowedAuthMethods,
-      allowedCardNetworks,
-      tokenizationSpecification
+      allowedPaymentMethods
     } = this.props
-    const baseCardPaymentMethod = {
-      type: paymentMethodType,
-      parameters: {
-        allowedAuthMethods,
-        allowedCardNetworks
-      },
-      tokenizationSpecification
-    }
 
     const isReadyToPayRequest = {
       apiVersion,
       apiVersionMinor,
-      allowedPaymentMethods: [baseCardPaymentMethod]
+      allowedPaymentMethods
     }
 
     paymentsClient.isReadyToPay(isReadyToPayRequest)
