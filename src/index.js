@@ -10,10 +10,12 @@ export default class GPayButton extends PureComponent {
   static propTypes = {
     style: PropTypes.object,
     className: PropTypes.string,
-    color: PropTypes.oneOf(['black', 'white']),
-    buttonType: PropTypes.oneOf(['long', 'short']),
     development: PropTypes.bool,
+    color: PropTypes.oneOf(['black', 'white']),
+    type: PropTypes.oneOf(['long', 'short']),
     // * Google Pay API
+    apiVersion: PropTypes.number,
+    apiVersionMinor: PropTypes.number,
     currencyCode: PropTypes.string.isRequired,
     countryCode: PropTypes.string,
     totalPriceStatus: PropTypes.string.isRequired,
@@ -28,7 +30,7 @@ export default class GPayButton extends PureComponent {
     },
     displayItems: PropTypes.arrayOf(PropTypes.shape({
       label: PropTypes.string.isRequired,
-      type: PropTypes.oneOf(['LINE_ITEM', 'SUBTOTAL']),
+      type: PropTypes.oneOf(['LINE_ITEM', 'SUBTOTAL']).isRequired,
       price: PropTypes.string.isRequired,
       status: PropTypes.oneOf(['FINAL', 'PENDING'])
     })),
@@ -47,10 +49,6 @@ export default class GPayButton extends PureComponent {
         }
       }
     },
-    baseRequest: PropTypes.shape({
-      apiVersion: PropTypes.number,
-      apiVersionMinor: PropTypes.number
-    }),
     tokenizationSpecification: PropTypes.shape({
       type: PropTypes.oneOf(['PAYMENT_GATEWAY', 'DIRECT']).isRequired,
       parameters: PropTypes.oneOfType([
@@ -64,13 +62,13 @@ export default class GPayButton extends PureComponent {
         })
       ]).isRequired
     }).isRequired,
-    allowedCardNetworks: PropTypes.arrayOf(PropTypes.oneOf(['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA'])),
     allowedAuthMethods: PropTypes.arrayOf(PropTypes.oneOf(['PAN_ONLY', 'CRYPTOGRAM_3DS'])),
+    allowedCardNetworks: PropTypes.arrayOf(PropTypes.oneOf(['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA'])),
     // ? Paypal support
     purchase_context: PropTypes.shape({
       purchase_units: PropTypes.array
     }),
-    paymentMethodType: PropTypes.oneOf(['CARD', 'PAYPAL']).isRequired,
+    paymentMethodType: PropTypes.oneOf(['CARD', 'PAYPAL']),
     onLoadPaymentData: PropTypes.func,
     onPaymentAuthorized: PropTypes.func,
     onPaymentDataChanged: PropTypes.func,
@@ -78,15 +76,14 @@ export default class GPayButton extends PureComponent {
   }
 
   static defaultProps = {
+    style: {},
     development: false,
     color: 'black',
-    buttonType: 'long',
-    baseRequest: {
-      apiVersion: 2,
-      apiVersionMinor: 0
-    },
-    allowedCardNetworks: ['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA'],
+    type: 'long',
+    apiVersion: 2,
+    apiVersionMinor: 0,
     allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+    allowedCardNetworks: ['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA'],
     paymentMethodType: 'CARD'
   }
 
@@ -154,7 +151,8 @@ export default class GPayButton extends PureComponent {
       totalPriceLabel,
       checkoutOption,
       merchantInfo,
-      baseRequest,
+      apiVersion,
+      apiVersionMinor,
       paymentMethodType,
       allowedAuthMethods,
       allowedCardNetworks,
@@ -175,7 +173,8 @@ export default class GPayButton extends PureComponent {
     }
 
     const paymentDataRequest = {
-      ...baseRequest,
+      apiVersion,
+      apiVersionMinor,
       allowedPaymentMethods: [baseCardPaymentMethod],
       transactionInfo: {
         currencyCode,
@@ -224,6 +223,8 @@ export default class GPayButton extends PureComponent {
     }
 
     const {
+      apiVersion,
+      apiVersionMinor,
       paymentMethodType,
       allowedAuthMethods,
       allowedCardNetworks,
@@ -239,7 +240,8 @@ export default class GPayButton extends PureComponent {
     }
 
     const isReadyToPayRequest = {
-      ...this.props.baseRequest,
+      apiVersion,
+      apiVersionMinor,
       allowedPaymentMethods: [baseCardPaymentMethod]
     }
 
@@ -264,7 +266,7 @@ export default class GPayButton extends PureComponent {
       className,
       style,
       color,
-      buttonType
+      type
     } = this.props
 
     return (
@@ -274,7 +276,7 @@ export default class GPayButton extends PureComponent {
             onClick={this.payButtonClickListener}
             type='button'
             aria-label='Google Pay'
-            className={`gpay-button ${color} ${buttonType}`}
+            className={`gpay-button ${color} ${type}`}
           />
         }
       </div>
