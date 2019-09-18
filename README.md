@@ -33,7 +33,7 @@ class Example extends Component {
         totalPriceStatus={'FINAL'}
         totalPrice={'14.45'}
         currencyCode={'GBP'}
-        countryCode={'UK'}
+        countryCode={'GB'}
         development={true}
       />
     )
@@ -95,7 +95,7 @@ class Example extends Component {
         totalPriceStatus={'FINAL'}
         totalPrice={'14.45'}
         currencyCode={'GBP'}
-        countryCode={'UK'}
+        countryCode={'GB'}
         allowedPaymentMethods={paymentMethods}
         development={true}
         merchantInfo={{

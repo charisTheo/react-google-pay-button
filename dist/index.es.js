@@ -335,7 +335,16 @@ GPayButton.defaultProps = {
         gatewayMerchantId: 'exampleGatewayMerchantId'
       }
     }
-  }]
+  }],
+  onLoadPaymentData: function onLoadPaymentData(paymentData) {
+    console.warn('GPayButton: Provide an onLoadPaymentData function to capture this paymentData', paymentData);
+  },
+  onPaymentAuthorized: function onPaymentAuthorized(paymentData) {
+    console.warn('GPayButton: Provide an onPaymentAuthorized function to capture this paymentData', paymentData);
+  },
+  onUserCanceled: function onUserCanceled(paymentDataRequest) {
+    console.warn('GPayButton: User has cancelled the transaction -> paymentDataRequest ', paymentDataRequest);
+  }
 };
 
 export default GPayButton;

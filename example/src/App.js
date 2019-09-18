@@ -29,7 +29,7 @@ export default class App extends Component {
           totalPriceStatus={'FINAL'}
           totalPrice={'1.45'}
           currencyCode={'GBP'}
-          countryCode={'UK'}
+          countryCode={'GB'}
           development={true}
           onLoadPaymentData={this.loadPaymentDataHandler}
           onPaymentAuthorized={this.paymentAuthorizedHandler}

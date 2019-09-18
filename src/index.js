@@ -106,7 +106,16 @@ export default class GPayButton extends PureComponent {
           }
         }
       }
-    ]
+    ],
+    onLoadPaymentData: paymentData => {
+      console.warn('GPayButton: Provide an onLoadPaymentData function to capture this paymentData', paymentData)
+    },
+    onPaymentAuthorized: paymentData => {
+      console.warn('GPayButton: Provide an onPaymentAuthorized function to capture this paymentData', paymentData)
+    },
+    onUserCanceled: paymentDataRequest => {
+      console.warn(`GPayButton: User has cancelled the transaction -> paymentDataRequest `, paymentDataRequest)
+    }
   }
 
   state = {
