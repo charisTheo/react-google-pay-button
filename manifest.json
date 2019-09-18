@@ -1,0 +1,8 @@
+{
+  "short_name": "react-google-pay-button",
+  "name": "react-google-pay-button",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
