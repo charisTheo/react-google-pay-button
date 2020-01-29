@@ -4,7 +4,9 @@
 
 # react-google-pay-button
 
-> A React Google Pay button component for the web
+A React Google Pay button component for the web.
+
+### [Example](https://www.charistheo.io/react-google-pay-button/)
 
 [![NPM](https://img.shields.io/npm/v/react-google-pay-button.svg)](https://www.npmjs.com/package/react-google-pay-button) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 
