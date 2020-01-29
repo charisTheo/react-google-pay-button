@@ -24,7 +24,7 @@ export default class App extends Component {
 
   render () {
     return (
-      <div style={{display: 'grid', alignContent: 'center', justifyContent: 'center', height: '100%'}}>
+      <div className="container">
         <GPayButton
           totalPriceStatus={'FINAL'}
           totalPrice={'1.45'}
