@@ -1,8 +1,13 @@
 {
   "name": "react-google-pay-button",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A React Google Pay button component for the web",
-  "keywords": ["react", "gpay", "payments", "google-pay"],
+  "keywords": [
+    "react",
+    "gpay",
+    "payments",
+    "google-pay"
+  ],
   "author": "charisTheo",
   "license": "MIT",
   "repository": "https://github.com/charisTheo/react-google-pay-button",
