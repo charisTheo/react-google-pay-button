@@ -161,6 +161,8 @@ var GPayButton = function (_PureComponent) {
       }
       if (typeof onPaymentDataChanged === 'function') {
         callbackIntents.push('SHIPPING_ADDRESS', 'SHIPPING_OPTION');
+        paymentDataRequest.shippingAddressRequired = true;
+        paymentDataRequest.shippingOptionRequired = true;
       }
       if (callbackIntents.length) {
         paymentDataRequest.callbackIntents = [].concat(callbackIntents);

@@ -63,5 +63,8 @@
   },
   "files": [
     "dist"
-  ]
+  ],
+  "dependencies": {
+    "@types/googlepay": "^0.2.3"
+  }
 }

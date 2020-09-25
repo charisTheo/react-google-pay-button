@@ -34,6 +34,7 @@ export default class App extends Component {
           onLoadPaymentData={this.loadPaymentDataHandler}
           onPaymentAuthorized={this.paymentAuthorizedHandler}
           onUserCanceled={this.onUserCanceledHandler}
+          onPaymentDataChanged={this.paymentDataChangedHandler}
         />
       </div>
     )

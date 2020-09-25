@@ -188,7 +188,9 @@ export default class GPayButton extends PureComponent {
       onLoadPaymentData,
       onPaymentAuthorized,
       onPaymentDataChanged,
-      onUserCanceled
+      onUserCanceled,
+      shippingAddressParameters,
+      shippingOptionParameters
     } = this.props
 
     const paymentDataRequest = {
@@ -212,7 +214,17 @@ export default class GPayButton extends PureComponent {
       callbackIntents.push('PAYMENT_AUTHORIZATION')
     }
     if (typeof onPaymentDataChanged === 'function') {
-      callbackIntents.push('SHIPPING_ADDRESS', 'SHIPPING_OPTION')
+      if (shippingAddressParameters) {
+        callbackIntents.push('SHIPPING_ADDRESS')
+        paymentDataRequest.shippingAddressParameters = shippingAddressParameters
+        paymentDataRequest.shippingAddressRequired = true
+      }
+      
+      if (shippingOptionParameters) {
+        callbackIntents.push('SHIPPING_OPTION')
+        paymentDataRequest.shippingOptionParameters = shippingOptionParameters
+        paymentDataRequest.shippingOptionRequired = true
+      }
     }
     if (callbackIntents.length) {
       paymentDataRequest.callbackIntents = [...callbackIntents]
