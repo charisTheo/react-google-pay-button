@@ -1,3 +1,7 @@
+| ⚠️ This package has been deprecated in favor of https://github.com/google-pay/google-pay-button/tree/main/src/button-react
+
+----
+
 <p align="center">
   <img src="https://github.com/charisTheo/react-google-pay-button/blob/master/gpay-react.png?raw=true" alt="Google Pay React unofficial logo"/>
 </p>
