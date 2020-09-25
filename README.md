@@ -1,4 +1,4 @@
-| ⚠️ This package has been deprecated in favor of https://github.com/google-pay/google-pay-button/tree/main/src/button-react
+" ⚠️ This package has been deprecated in favor of https://github.com/google-pay/google-pay-button/tree/main/src/button-react
 
 ----
 
